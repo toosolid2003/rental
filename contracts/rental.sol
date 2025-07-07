@@ -3,37 +3,53 @@ pragma solidity ^0.8.28;
 
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Rental is ReentrancyGuard {
+contract Rental is ReentrancyGuard, Ownable {
+    
+    // Variables
     uint256 public expectedRent;
     uint256 public payDate;
+    uint256 public startDate;
+    uint256 public endDate;
     uint256 public score;
-    address renter;
-    address owner;
 
-
+    address public renter;
+    address public landlord;
+    
+    // Events
     event RentPaid(uint payDate, uint amount, address indexed renter);
+    event NewEnd(uint indexed endDate, address owner);
+    event RentUpdate(uint indexed newRent, address landlord);
 
-    constructor(uint _payDate, uint _expectedRent, address _renter)  {
-        payDate = _payDate;
+    constructor(uint _payDate, uint _expectedRent, address _renter, uint _startDate, uint _endDate) Ownable(_renter){
+        payDate = _payDate; // Initialize with 1st paydate, the next month.
         expectedRent = _expectedRent;
         renter = _renter;
-        }
+        score = 100;
+        startDate = _startDate;
+        endDate = _endDate;
+    }
     
-    function payRent() public payable nonReentrant  {
+    function payRent() external payable nonReentrant {
 
+       // TODO: anonimize the payment with ZK + make anonimity composable 
+
+        // Only allow one address to pay the rent
         require(msg.sender == renter, "Payer not allowed");
+
+        // Check if the amount paid matches the expected amount
         require(msg.value == expectedRent, "Wrong rent amount");
-        require(block.timestamp >= payDate - 5 days, 'Payment is too earlt');
+        require(block.timestamp <= endDate, "The lease has expired");
 
-        // Send money
-        (bool success, ) = owner.call{value: msg.value}("");
-        require(success, "Failed to send the rent");
-
+        // Once rent paid, update score, update paydate and emit event
+        updateScore(1); // Margin set to 1 days after due date
+        payDate = payDate + 30 days;
         emit RentPaid(payDate, msg.value, renter);
-
-        updateScore(1);
-        resetPayDate();
+        
+        // After rent is received, send money to the landlord's wallet directly
+        (bool success, ) = landlord.call{value: msg.value}("");
+        require(success, "Failed to send the rent");
 
     }
 
@@ -41,36 +57,43 @@ contract Rental is ReentrancyGuard {
         // _margin specifies the tolerance in days
 
         // verify date
-        uint256 lowDate = payDate - (_margin * 1 days);
         uint256 highDate = payDate + (_margin * 1 days);
+ 
 
-        if(block.timestamp <= highDate && block.timestamp >= lowDate)   {
-            
-            //Increase score by 10 points
+        if(block.timestamp >= highDate)    {
+            //Decrease score by 10 points
             unchecked   {
-                score += 10;
+                score -= 1;
             }
-            
-        }
-
-        else if(block.timestamp > highDate) {
-            // Rent is paid too late
-            unchecked   {
-                score -= 30;
-            }
-            
         }
     }
 
-    function resetPayDate() internal {
-        payDate = payDate + 30 days;
-
+    function getScore() public view returns(uint256)    {
+        return score;
     }
 
+    function checkRent() external view returns(uint256) {
+        return expectedRent;
+    }
+ 
     function sendNotice()   public  {
+        // Add logic for notice if needed        require(msg.sender == renter, "Not allowed to terminate contract");
 
     }
 
+    // Multisig functions
+
+    function updateExpiry(uint _newDate) public onlyOwner  {
+        endDate = _newDate;
+        emit NewEnd(endDate, owner());
+    }
+
+   function updateRent(uint _newRent) public {
+
+    // TODO: logic to capture both signature: landlord and tenant
+    expectedRent = _newRent;
+    emit RentUpdate(_newRent, landlord);
+   } 
 
 //Contract end
 }
