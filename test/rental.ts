@@ -51,7 +51,7 @@ it("should decrease score by 1 point if rent is paid late", async function()  {
 
   await time.increaseTo(payDate + 60 * 60 * 24 * 10); // 10 days after payDate
   const tx = await rentalContract.connect(renter).payRent({value: ethers.parseEther("1.0")});
-  await expect(await rentalContract.getScore()).to.equal(99);
+  await expect(await rentalContract.getScore()).to.equal(91);
 })
 
   // Test : should not accept payments after the lease ended
@@ -61,6 +61,15 @@ it("should decrease score by 1 point if rent is paid late", async function()  {
     await time.increaseTo(endDate + 1); // 1 second after endDate
     await expect(rentalContract.connect(renter).payRent({value: ethers.parseEther("1.0")})
       ).to.be.revertedWith("The lease has expired");
+  })
+
+  // Test: did not pay the last month rent
+  it("should punish renters who fail to pay rent ", async function()  {
+    const { rentalContract, renter, payDate } = await loadFixture(deployRent);
+
+    await time.increaseTo(payDate + 60*60*24*32); // 32 days after payDate
+    const tx = await rentalContract.connect(renter).payRent({value:ethers.parseEther("1.0")});
+    await expect(await rentalContract.getScore()).to.equal(69);
   })
 
 

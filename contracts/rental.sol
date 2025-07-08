@@ -8,17 +8,18 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Rental is ReentrancyGuard, Ownable {
     
     // Variables
-    uint256 public expectedRent;
+    uint256 private expectedRent;
     uint256 public payDate;
     uint256 public startDate;
     uint256 public endDate;
-    uint256 public score;
+    uint256 private score;
 
-    address public renter;
-    address public landlord;
+    address private renter;
+    address private landlord;
     
     // Events
     event RentPaid(uint payDate, uint amount, address indexed renter);
+    event NewPayDate(uint indexed payDate, address indexed renter);
     event NewEnd(uint indexed endDate, address owner);
     event RentUpdate(uint indexed newRent, address landlord);
 
@@ -33,7 +34,7 @@ contract Rental is ReentrancyGuard, Ownable {
     
     function payRent() external payable nonReentrant {
 
-       // TODO: anonimize the payment with ZK + make anonimity composable 
+       // TODO: anonimize the payment with ZK + make anonimity composable? 
 
         // Only allow one address to pay the rent
         require(msg.sender == renter, "Payer not allowed");
@@ -42,14 +43,17 @@ contract Rental is ReentrancyGuard, Ownable {
         require(msg.value == expectedRent, "Wrong rent amount");
         require(block.timestamp <= endDate, "The lease has expired");
 
-        // Once rent paid, update score, update paydate and emit event
-        updateScore(1); // Margin set to 1 days after due date
-        payDate = payDate + 30 days;
-        emit RentPaid(payDate, msg.value, renter);
+
         
         // After rent is received, send money to the landlord's wallet directly
         (bool success, ) = landlord.call{value: msg.value}("");
         require(success, "Failed to send the rent");
+        emit RentPaid(payDate, msg.value, renter);
+
+        // Once rent paid, update score, update paydate and emit event
+        updateScore(1); // Margin set to 1 days after due date
+        payDate = payDate + 30 days;
+        emit NewPayDate(payDate, renter);
 
     }
 
@@ -61,9 +65,15 @@ contract Rental is ReentrancyGuard, Ownable {
  
 
         if(block.timestamp >= highDate)    {
-            //Decrease score by 10 points
-            unchecked   {
-                score -= 1;
+            //TODO: Decrease score by 1 point per day
+            uint256 penalty = (block.timestamp - highDate) / 1 days;
+
+            if(score < penalty) {
+                score = 0;
+            } else {
+                {
+                    score -= penalty;
+                }
             }
         }
     }
