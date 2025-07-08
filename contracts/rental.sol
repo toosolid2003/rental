@@ -5,7 +5,7 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Rental is ReentrancyGuard, Ownable {
+contract Rental is ReentrancyGuard {
     
     // Variables
     uint256 private expectedRent;
@@ -16,6 +16,17 @@ contract Rental is ReentrancyGuard, Ownable {
 
     address private renter;
     address private landlord;
+
+    // Modifiers
+    modifier onlyWallets()  {
+        require(msg.sender == renter || msg.sender == landlord, "Wallet not allowed");
+        _;
+    }
+
+    modifier onlyLandlord() {
+        require(msg.sender == landlord, "Account not allowed");
+        _;
+    }
     
     // Events
     event RentPaid(uint payDate, uint amount, address indexed renter);
@@ -23,7 +34,7 @@ contract Rental is ReentrancyGuard, Ownable {
     event NewEnd(uint indexed endDate, address owner);
     event RentUpdate(uint indexed newRent, address landlord);
 
-    constructor(uint _payDate, uint _expectedRent, address _renter, uint _startDate, uint _endDate) Ownable(_renter){
+    constructor(uint _payDate, uint _expectedRent, address _renter, uint _startDate, uint _endDate) {
         payDate = _payDate; // Initialize with 1st paydate, the next month.
         expectedRent = _expectedRent;
         renter = _renter;
@@ -78,31 +89,30 @@ contract Rental is ReentrancyGuard, Ownable {
         }
     }
 
-    function getScore() public view returns(uint256)    {
+    function getScore() public view onlyWallets returns(uint256)    {
         return score;
     }
 
-    function checkRent() external view returns(uint256) {
+    function checkRent() external view onlyWallets returns(uint256) {
         return expectedRent;
     }
  
-    function sendNotice()   public  {
+    function sendNotice() public onlyWallets  {
         // Add logic for notice if needed        require(msg.sender == renter, "Not allowed to terminate contract");
 
     }
 
-    // Multisig functions
+    // Landlord specific functions
 
-    function updateExpiry(uint _newDate) public onlyOwner  {
+    function updateExpiry(uint _newDate) public onlyLandlord  {
         endDate = _newDate;
-        emit NewEnd(endDate, owner());
+        emit NewEnd(endDate, msg.sender);
     }
 
-   function updateRent(uint _newRent) public {
+   function updateRent(uint _newRent) public onlyLandlord {
 
-    // TODO: logic to capture both signature: landlord and tenant
     expectedRent = _newRent;
-    emit RentUpdate(_newRent, landlord);
+    emit RentUpdate(_newRent, msg.sender);
    } 
 
 //Contract end
