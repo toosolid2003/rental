@@ -5,7 +5,7 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Rental is ReentrancyGuard {
+contract Rental is ReentrancyGuard, Ownable {
     
     // Variables
     uint256 private expectedRent;
@@ -24,17 +24,19 @@ contract Rental is ReentrancyGuard {
     }
 
     modifier onlyLandlord() {
-        require(msg.sender == landlord, "Account not allowed");
+        require(msg.sender == landlord, "Only the landlord is allowed to perform this operation");
         _;
     }
     
     // Events
     event RentPaid(uint payDate, uint amount, address indexed renter);
+    event ScoreUpdated(uint penalty, uint indexed newScore);
+
     event NewPayDate(uint indexed payDate, address indexed renter);
     event NewEnd(uint indexed endDate, address owner);
     event RentUpdate(uint indexed newRent, address landlord);
 
-    constructor(uint _payDate, uint _expectedRent, address _renter, uint _startDate, uint _endDate) {
+    constructor(uint _payDate, uint _expectedRent, address _renter, uint _startDate, uint _endDate) Ownable(_renter) {
         payDate = _payDate; // Initialize with 1st paydate, the next month.
         expectedRent = _expectedRent;
         renter = _renter;
@@ -86,6 +88,7 @@ contract Rental is ReentrancyGuard {
                     score -= penalty;
                 }
             }
+            emit ScoreUpdated(penalty, score);
         }
     }
 
@@ -98,7 +101,7 @@ contract Rental is ReentrancyGuard {
     }
  
     function sendNotice() public onlyWallets  {
-        // Add logic for notice if needed        require(msg.sender == renter, "Not allowed to terminate contract");
+        // Add logic for notice if needed
 
     }
 
