@@ -9,11 +9,12 @@ export default buildModule(
     const payDate = Math.floor(new Date('07/20/2025').getTime() / 1000);
     const expectedRent = BigInt(parseEther("1400")).toString(); // 1400 ETH   
     const renter = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"; 
+    const landlord = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"; // Last hardhat account
     const startDate = Math.floor(new Date('07/10/2025').getTime() / 1000);
     const endDate = Math.floor(new Date('07/10/2027').getTime() / 1000);
 
 
-    const vault = m.contract("Rental", [payDate, expectedRent, renter, startDate, endDate]);
+    const vault = m.contract("Rental", [payDate, expectedRent, renter, landlord, startDate, endDate]);
 
     return { vault };
   }

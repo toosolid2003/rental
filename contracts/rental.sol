@@ -36,11 +36,12 @@ contract Rental is ReentrancyGuard, Ownable {
     event NewEnd(uint indexed endDate, address owner);
     event RentUpdate(uint indexed newRent, address landlord);
 
-    constructor(uint _payDate, uint _expectedRent, address _renter, uint _startDate, uint _endDate) Ownable(_renter) {
+    constructor(uint _payDate, uint _expectedRent, address _renter, address _landlord, uint _startDate, uint _endDate) Ownable(_renter) {
         payDate = _payDate; // Initialize with 1st paydate, the next month.
         expectedRent = _expectedRent;
         renter = _renter;
-        score = 100;
+        landlord = _landlord;
+        score = 80;
         startDate = _startDate;
         endDate = _endDate;
     }
@@ -77,18 +78,24 @@ contract Rental is ReentrancyGuard, Ownable {
         uint256 highDate = payDate + (_margin * 1 days);
  
 
-        if(block.timestamp >= highDate)    {
-            //TODO: Decrease score by 1 point per day
-            uint256 penalty = (block.timestamp - highDate) / 1 days;
+        // if(block.timestamp >= highDate)    {
+            //Option 1: Decrease score by 1 point per day
+            // uint256 penalty = (block.timestamp - highDate) / 1 days;
 
-            if(score < penalty) {
-                score = 0;
-            } else {
-                {
-                    score -= penalty;
-                }
-            }
-            emit ScoreUpdated(penalty, score);
+            // if(score < penalty) {
+            //     score = 0;
+            // } else {
+            //     {
+            //         score -= penalty;
+            //     }
+            // }
+            // emit ScoreUpdated(penalty, score);
+
+            // Option 2: add 10 points each timne the rent is within specified margin
+
+        // }
+        if (block.timestamp <= highDate)    {
+            score += 10;
         }
     }
 
