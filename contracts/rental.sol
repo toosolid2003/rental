@@ -99,6 +99,10 @@ contract Rental is ReentrancyGuard, Ownable {
         }
     }
 
+    function getLandlord()  public view onlyWallets returns(address)    {
+        return landlord;
+    }
+
     function getScore() public view onlyWallets returns(uint256)    {
         return score;
     }
