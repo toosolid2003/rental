@@ -78,22 +78,21 @@ contract Rental is ReentrancyGuard, Ownable {
         uint256 highDate = payDate + (_margin * 1 days);
  
 
-        // if(block.timestamp >= highDate)    {
-            //Option 1: Decrease score by 1 point per day
-            // uint256 penalty = (block.timestamp - highDate) / 1 days;
+        if(block.timestamp >= highDate)    {
 
-            // if(score < penalty) {
-            //     score = 0;
-            // } else {
-            //     {
-            //         score -= penalty;
-            //     }
-            // }
-            // emit ScoreUpdated(penalty, score);
+            uint256 penalty = (block.timestamp - highDate) / 1 days;
 
-            // Option 2: add 10 points each timne the rent is within specified margin
+            if(score < penalty) {
+                score = 0;
+            } else {
+                {
+                    score -= penalty;
+                }
+            }
+            emit ScoreUpdated(penalty, score);
 
-        // }
+        }
+        
         if (block.timestamp <= highDate)    {
             score += 10;
         }
