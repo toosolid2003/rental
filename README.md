@@ -5,10 +5,6 @@ It enables renters to pay on-chain, track their rental score, share it with prop
 
 ---
 
-## UI
-![Home Screen](assets/Home%20Screen.png)
-![Payment Screen](assets/Payment%20Screen.png)
-
 ## Features
 
 - Connect Ethereum wallet (RainbowKit)  
