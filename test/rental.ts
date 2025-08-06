@@ -37,7 +37,7 @@ it("should return an error if rent amount in wrong", async function()  {
   await expect(rentalContract.connect(renter).payRent({value: ethers.parseEther("0.5")})).to.be.revertedWith("Wrong rent amount");
 })
 
-// Test: paying on time with the right amount should keep the score intact
+// Test: paying on time with the right amount should increase the score by 10
 it("should increase the score by 10 points if paid on time with right amount", async function() {
   const { rentalContract, renter, payDate } = await loadFixture(deployRent);
 
@@ -74,6 +74,20 @@ it("should decrease score by 1 point if rent is paid late", async function()  {
   })
 
 
+  // Test: landord's wallet should be credited
+  it("should credit the landlord's wallet with the rent ", async function()  {
+    const { rentalContract, payDate, renter, landlord } = await loadFixture(deployRent);
+
+    await time.increaseTo(payDate - 1);  // 1 second before due
+    
+    const landlordBalanceBefore = await ethers.provider.getBalance(landlord.address);
+
+    await rentalContract.connect(renter).payRent({ value: ethers.parseEther("1.0") });
+
+    const landlordBalanceAfter = await ethers.provider.getBalance(landlord.address);
+
+    expect(landlordBalanceAfter - landlordBalanceBefore).to.equal(ethers.parseEther("1.0"));
+  })
 
 // end of Describe
 })
