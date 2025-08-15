@@ -8,10 +8,10 @@ export default buildModule(
     // const initialOwner = m.getParameter("initialOwner");
     const payDate = Math.floor(new Date('07/20/2025').getTime() / 1000);
     const expectedRent = BigInt(parseEther("0.01")).toString(); // 0.01 ETH   
-    const renter = "0xd9e8294515669AD69068d97Bc61Ff58ed87218E3"  // Berarchain testnet account
-    const landlord = "0xe930e1c67410e8807C3aD8de503a98e74C94b17e"; // EthDam account
-    const startDate = Math.floor(new Date('08/07/2025').getTime() / 1000);
-    const endDate = Math.floor(new Date('08/07 /2027').getTime() / 1000);
+    const renter = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"  // Last hardhat node account
+    const landlord = "0xdD2FD4581271e230360230F9337D5c0430Bf44C0"; // Second but last hardhat node account
+    const startDate = Math.floor(new Date('02/07/2025').getTime() / 1000);
+    const endDate = Math.floor(new Date('02/07 /2027').getTime() / 1000);
 
 
     const vault = m.contract("Rental", [payDate, expectedRent, renter, landlord, startDate, endDate]);

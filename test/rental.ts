@@ -89,6 +89,28 @@ it("should decrease score by 1 point if rent is paid late", async function()  {
     expect(landlordBalanceAfter - landlordBalanceBefore).to.equal(ethers.parseEther("1.0"));
   })
 
+  // Test: should return a RentPaid event when the rent had been paid
+  it("should send a RentPaid event when rent is paid", async function()  {
+  const { rentalContract, renter } = await loadFixture(deployRent);
+  const tx = await rentalContract.connect(renter).payRent({value: ethers.parseEther("1.0")});
+  const receipt = await tx.wait();
+  expect(receipt).to.emit(rentalContract, "RentPaid")
+                    .withArgs(Date.now(), ethers.parseEther("1.0"), renter, true);
+}) 
+
+    // Test: should return a NewPayDate event when the rent had been paid
+  it("should send a NewPayDate event when rent is paid", async function()  {
+  const { rentalContract, renter } = await loadFixture(deployRent);
+  const tx = await rentalContract.connect(renter).payRent({value: ethers.parseEther("1.0")});
+  const receipt = await tx.wait();
+
+  // Set new expected payDate 30 days after payment
+  const newPaydDate = Date.now() + 30 * 24 * 60 * 60;
+  expect(receipt).to.emit(rentalContract, "NewPayDate")
+                    .withArgs(Date.now(), renter);
+}) 
+
+//  event NewPayDate(uint indexed payDate, address indexed renter);
 // end of Describe
 })
 
