@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
 
 contract Rental is ReentrancyGuard, Ownable {
     
@@ -24,6 +25,7 @@ contract Rental is ReentrancyGuard, Ownable {
     }
 
     Payment[] public paymentSchedule;
+    uint256 counter;
 
     // Modifiers
     modifier onlyWallets()  {
@@ -47,11 +49,12 @@ contract Rental is ReentrancyGuard, Ownable {
         expectedRent = _expectedRent;
         renter = _renter;
         landlord = _landlord;
-        score = 80;
+        score = 100;
         startDate = _startDate;
         endDate = _endDate;
 
         populateSchedule(_payDate, _endDate);
+        counter = 0;
     }
 
     function populateSchedule(uint256 pd, uint256 endLease) public {
@@ -82,22 +85,17 @@ contract Rental is ReentrancyGuard, Ownable {
         (bool success, ) = landlord.call{value: msg.value}("");
         require(success, "Failed to send the rent");
 
+
         // Once rent paid, update score 
         on_time = updateScore(1); // Margin set to 1 days after due date. Returns bool: on_time or not.
-
-        // Adjust next pay date
-        // TODO: update with the new paymentSchedule mapping
-        // 1. Get all paydates with "false"
-        // 2. Get the lowest pay date
-        // 3. Update it to "true"
-
-        payDate = payDate + 30 days;
-        emit NewPayDate(payDate, renter);
-
-        // Emit evenut
-        emit RentPaid(payDate, msg.value, renter, on_time);
         
+        // Emit RentPaid event
+        emit RentPaid(paymentSchedule[counter].date, msg.value, renter, on_time);
 
+        // Adjust next pay date & emit newPayDate event
+        paymentSchedule[counter].paid = on_time;
+        counter += 1;
+        emit NewPayDate(paymentSchedule[counter].date, renter);
 
     }
 
