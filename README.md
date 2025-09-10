@@ -3,6 +3,8 @@
 A decentralized rental payment and scoring dApp built with Solidity, Hardhat, React, wagmi, and Tailwind CSS.  
 It enables renters to pay on-chain, track their rental score, share it with propsective landlords and visualize payments with smooth UI feedback.
 
+[Loom demo](https://www.loom.com/share/f2d10ec8a9c249f89304a005cead8e84?sid=bf34c422-a5dc-4450-925e-5e09cc6e860d)
+
 ---
 
 ## Features

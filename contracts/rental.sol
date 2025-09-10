@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
 
 contract Rental is ReentrancyGuard, Ownable {
     
@@ -16,6 +17,15 @@ contract Rental is ReentrancyGuard, Ownable {
 
     address private renter;
     address private landlord;
+    mapping(address => bytes32[]) public attestationsByTenant;
+    
+    struct Payment{
+        uint256 date;
+        bool paid;
+    }
+
+    Payment[] public paymentSchedule;
+    uint256 counter;
 
     // Modifiers
     modifier onlyWallets()  {
@@ -29,9 +39,7 @@ contract Rental is ReentrancyGuard, Ownable {
     }
     
     // Events
-    event RentPaid(uint payDate, uint amount, address indexed renter);
-    event ScoreUpdated(uint penalty, uint indexed newScore);
-
+    event RentPaid(uint payDate, uint amount, address indexed renter, bool onTime);
     event NewPayDate(uint indexed payDate, address indexed renter);
     event NewEnd(uint indexed endDate, address owner);
     event RentUpdate(uint indexed newRent, address landlord);
@@ -41,14 +49,28 @@ contract Rental is ReentrancyGuard, Ownable {
         expectedRent = _expectedRent;
         renter = _renter;
         landlord = _landlord;
-        score = 80;
+        score = 100;
         startDate = _startDate;
         endDate = _endDate;
+
+        populateSchedule(_payDate, _endDate);
+        counter = 0;
     }
-    
+
+    function populateSchedule(uint256 pd, uint256 endLease) public {
+        // loop: start at firstPayDate, assign a "false" then continue until the next firstPayDate is superior
+        // to endLease
+        
+        while(pd <= endLease)   {
+            paymentSchedule.push(Payment({ date: pd, paid: false}));
+            pd += 30 days;
+        }
+
+    } 
     function payRent() external payable nonReentrant {
 
-       // TODO: anonimize the payment with ZK + make anonimity composable? 
+       // Declare a memory variable to know if rent is paid on time 
+        bool on_time;
 
         // Only allow one address to pay the rent
         require(msg.sender == renter, "Payer not allowed");
@@ -62,16 +84,22 @@ contract Rental is ReentrancyGuard, Ownable {
         // After rent is received, send money to the landlord's wallet directly
         (bool success, ) = landlord.call{value: msg.value}("");
         require(success, "Failed to send the rent");
-        emit RentPaid(payDate, msg.value, renter);
 
-        // Once rent paid, update score, update paydate and emit event
-        updateScore(1); // Margin set to 1 days after due date
-        payDate = payDate + 30 days;
-        emit NewPayDate(payDate, renter);
+
+        // Once rent paid, update score 
+        on_time = updateScore(1); // Margin set to 1 days after due date. Returns bool: on_time or not.
+        
+        // Emit RentPaid event
+        emit RentPaid(paymentSchedule[counter].date, msg.value, renter, on_time);
+
+        // Adjust next pay date & emit newPayDate event
+        paymentSchedule[counter].paid = on_time;
+        counter += 1;
+        emit NewPayDate(paymentSchedule[counter].date, renter);
 
     }
 
-    function updateScore(uint _margin) internal {
+    function updateScore(uint _margin) internal returns (bool){
         // _margin specifies the tolerance in days
 
         // verify date
@@ -89,13 +117,23 @@ contract Rental is ReentrancyGuard, Ownable {
                     score -= penalty;
                 }
             }
-            emit ScoreUpdated(penalty, score);
+            
+            // Return false if rent not paid on time
+            return false;
 
         }
         
-        if (block.timestamp <= highDate)    {
+        else  {
             score += 10;
+
+            // Return true is rent paid on time
+            return true;
         }
+    }
+
+    // Store the attestation, it's generated in the front-end via the EAS SDK
+    function storeAttestation(bytes32 attestationId) external onlyWallets()  {
+        attestationsByTenant[msg.sender].push(attestationId);
     }
 
     function getLandlord()  public view onlyWallets returns(address)    {
