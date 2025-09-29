@@ -8,13 +8,14 @@ export default buildModule(
     // const initialOwner = m.getParameter("initialOwner");
     const payDate = Math.floor(new Date('07/20/2025').getTime() / 1000);
     const expectedRent = BigInt(parseEther("0.01")).toString(); // 0.01 ETH   
-    const renter = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"  // Last hardhat node account
+    const renter = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
     const landlord = "0xdD2FD4581271e230360230F9337D5c0430Bf44C0"; // Second but last hardhat node account
     const startDate = Math.floor(new Date('02/07/2025').getTime() / 1000);
     const endDate = Math.floor(new Date('02/07 /2027').getTime() / 1000);
+    const location = "34 rue Feutrier 75018 Paris"
 
 
-    const vault = m.contract("Rental", [payDate, expectedRent, renter, landlord, startDate, endDate]);
+    const vault = m.contract("Rental", [payDate, expectedRent, renter, landlord, startDate, endDate, location]);
 
     return { vault };
   }

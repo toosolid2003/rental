@@ -15,7 +15,8 @@ describe("RentalScore", function () {
     const expectedRent = ethers.parseEther("1.0")
     const payDate = now + 30 * 24 * 60 * 60;  
     const startDate = now; 
-    const endDate = now + 365 * 24 * 60 * 60; 
+    const endDate = now + 365 * 24 * 60 * 60;
+    const location = "34 rue Feutrier, 75018 Paris"
 
     const rentalContract = await hre.ethers.deployContract("Rental", [
       payDate, 
@@ -23,7 +24,8 @@ describe("RentalScore", function () {
       renter, 
       landlord,
       startDate,
-      endDate
+      endDate,
+      location,
     ]);
 
     return { rentalContract, owner, landlord, renter, expectedRent, payDate, endDate };
@@ -149,7 +151,7 @@ it("should decrease score by 1 point if rent is paid late", async function()  {
     const tx = await rentalContract.connect(renter).getPayments();
 
     // 2nd payment date should be startDate + 30 days
-    const secPayment = await time.latest() + 60 * 24 * 60 * 60;
-    expect(tx[1][0]).to.equal(secPayment - 1);
+    const secPayment = await time.latest() + 60 * 24 * 60 * 60 -1;
+    expect(tx[1][0]).to.equal(secPayment);
   })
 })

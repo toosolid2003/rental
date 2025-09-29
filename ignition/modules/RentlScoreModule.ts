@@ -12,9 +12,9 @@ export default buildModule(
     const landlord = "0xe930e1c67410e8807C3aD8de503a98e74C94b17e"; // EthDam account
     const startDate = Math.floor(new Date('08/30/2025').getTime() / 1000);
     const endDate = Math.floor(new Date('08/30/2027').getTime() / 1000);
+    const location = "34 rue Feutrier 75018 Paris"
 
-
-    const vault = m.contract("Rental", [payDate, expectedRent, renter, landlord, startDate, endDate]);
+    const vault = m.contract("Rental", [payDate, expectedRent, renter, landlord, startDate, endDate, location]);
 
     return { vault };
   }
