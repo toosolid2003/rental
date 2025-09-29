@@ -17,6 +17,7 @@ contract Rental is ReentrancyGuard, Ownable {
 
     address private renter;
     address private landlord;
+    string public loc;
     
     struct Payment{
         uint256 date;
@@ -44,7 +45,7 @@ contract Rental is ReentrancyGuard, Ownable {
     event NewEnd(uint indexed endDate, address owner);
     event RentUpdate(uint indexed newRent, address landlord);
 
-    constructor(uint _payDate, uint _expectedRent, address _renter, address _landlord, uint _startDate, uint _endDate) Ownable(_renter) {
+    constructor(uint _payDate, uint _expectedRent, address _renter, address _landlord, uint _startDate, uint _endDate, string memory _loc) Ownable(_renter) {
         payDate = _payDate; // Initialize with 1st paydate, the next month.
         expectedRent = _expectedRent;
         renter = _renter;
@@ -52,6 +53,7 @@ contract Rental is ReentrancyGuard, Ownable {
         score = 100;
         startDate = _startDate;
         endDate = _endDate;
+        loc = _loc;
 
         populateSchedule(_payDate, _endDate);
         counter = 0;
