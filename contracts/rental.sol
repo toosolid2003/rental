@@ -93,7 +93,7 @@ contract Rental is ReentrancyGuard, Ownable {
         emit RentPaid(paymentSchedule[counter].date, msg.value, renter, on_time);
 
         // Adjust next pay date & emit newPayDate event
-        paymentSchedule[counter].paid = on_time;
+        paymentSchedule[counter].paid = true;
         counter += 1;
         emit NewPayDate(paymentSchedule[counter].date, renter);
 
@@ -134,6 +134,10 @@ contract Rental is ReentrancyGuard, Ownable {
     // Store the attestation, it's generated in the front-end via the EAS SDK
     function storeAttestation(bytes32 attestationId) external onlyWallets()  {
         attestationsByTenant[msg.sender].push(attestationId);
+    }
+
+    function getPayments() public view  returns(Payment[] memory) {
+        return paymentSchedule;
     }
 
     function getLandlord()  public view onlyWallets returns(address)    {
