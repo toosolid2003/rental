@@ -17,11 +17,11 @@ contract Rental is ReentrancyGuard, Ownable {
 
     address private renter;
     address private landlord;
-    mapping(address => bytes32[]) public attestationsByTenant;
     
     struct Payment{
         uint256 date;
         bool paid;
+        bool onTime;
     }
 
     Payment[] public paymentSchedule;
@@ -62,7 +62,7 @@ contract Rental is ReentrancyGuard, Ownable {
         // to endLease
         
         while(pd <= endLease)   {
-            paymentSchedule.push(Payment({ date: pd, paid: false}));
+            paymentSchedule.push(Payment({ date: pd, paid: false, onTime: false}));
             pd += 30 days;
         }
 
@@ -92,8 +92,10 @@ contract Rental is ReentrancyGuard, Ownable {
         // Emit RentPaid event
         emit RentPaid(paymentSchedule[counter].date, msg.value, renter, on_time);
 
-        // Adjust next pay date & emit newPayDate event
+        // Log the payment, its timeliness and move to the next payment on the scheduler
         paymentSchedule[counter].paid = true;
+        paymentSchedule[counter].onTime = on_time;
+        
         counter += 1;
         emit NewPayDate(paymentSchedule[counter].date, renter);
 
@@ -131,10 +133,6 @@ contract Rental is ReentrancyGuard, Ownable {
         }
     }
 
-    // Store the attestation, it's generated in the front-end via the EAS SDK
-    function storeAttestation(bytes32 attestationId) external onlyWallets()  {
-        attestationsByTenant[msg.sender].push(attestationId);
-    }
 
     function getPayments() public view  returns(Payment[] memory) {
         return paymentSchedule;
