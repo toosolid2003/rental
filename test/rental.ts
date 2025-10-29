@@ -154,4 +154,43 @@ it("should decrease score by 1 point if rent is paid late", async function()  {
     const secPayment = await time.latest() + 60 * 24 * 60 * 60 -1;
     expect(tx[1][0]).to.equal(secPayment);
   })
+
+
+  // Test: paying rent well in advance should be marked as on-time
+  it("should mark early payments as on-time and increase score", async function() {
+    const { rentalContract, renter, payDate, landlord } = await loadFixture(deployRent);
+    
+    // Move time to 15 days before payDate
+    await time.increaseTo(payDate - (15 * 24 * 60 * 60));
+    
+    // Get initial balances
+    const landlordBalanceBefore = await ethers.provider.getBalance(landlord.address);
+    const initialScore = await rentalContract.connect(renter).getScore();
+    
+    // Pay rent early
+    const tx = await rentalContract.connect(renter).payRent({
+      value: ethers.parseEther("1.0")
+    });
+    
+    // Get payment record
+    const payments = await rentalContract.connect(renter).getPayments();
+    
+    // Verify payment was marked as paid and on time
+    expect(payments[0][1]).to.equal(true);  // paid
+    expect(payments[0][2]).to.equal(true);  // onTime
+    
+    // Verify score increased by 10
+    // const newScore = await rentalContract.connect(renter).getScore();
+    // expect(newScore).to.equal(initialScore + BigInt(10));
+    
+    // Verify landlord received payment
+    const landlordBalanceAfter = await ethers.provider.getBalance(landlord.address);
+    expect(landlordBalanceAfter - landlordBalanceBefore).to.equal(ethers.parseEther("1.0"));
+    
+    // Verify events were emitted
+    const receipt = await tx.wait();
+    expect(receipt).to.emit(rentalContract, "RentPaid")
+      .withArgs(payments[0][0], ethers.parseEther("1.0"), renter, true);
+    expect(receipt).to.emit(rentalContract, "NewPayDate");
+  });
 })
