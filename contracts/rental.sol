@@ -107,7 +107,7 @@ contract Rental is ReentrancyGuard, Ownable {
         // _margin specifies the tolerance in days
 
         // verify date
-        uint256 highDate = payDate + (_margin * 1 days);
+        uint256 highDate = paymentSchedule[counter].date + (_margin * 1 days);
  
 
         if(block.timestamp >= highDate)    {
