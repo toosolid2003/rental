@@ -5,6 +5,7 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
+import "./BokkyPooBahsDateTimeLibrary.sol";
 
 contract Rental is ReentrancyGuard, Ownable {
     
@@ -62,10 +63,11 @@ contract Rental is ReentrancyGuard, Ownable {
     function populateSchedule(uint256 pd, uint256 endLease) public {
         // loop: start at firstPayDate, assign a "false" then continue until the next firstPayDate is superior
         // to endLease
-        
+
         while(pd <= endLease)   {
             paymentSchedule.push(Payment({ date: pd, paid: false, onTime: false}));
-            pd += 30 days;
+            // Add exactly 1 month using the DateTime library (handles varying month lengths)
+            pd = BokkyPooBahsDateTimeLibrary.addMonths(pd, 1);
         }
 
     } 
