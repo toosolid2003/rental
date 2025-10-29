@@ -169,6 +169,7 @@ contract Rental is ReentrancyGuard, Ownable {
     expectedRent = _newRent;
     emit RentUpdate(_newRent, msg.sender);
    } 
-
-//Contract end
+   function getPaymentCount() public view returns(uint256) {
+    return paymentSchedule.length;
+}
 }
