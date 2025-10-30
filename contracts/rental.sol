@@ -24,6 +24,7 @@ contract Rental is ReentrancyGuard, Ownable {
         uint256 date;
         bool paid;
         bool onTime;
+        bytes32 txHash;
     }
 
     Payment[] public paymentSchedule;
@@ -65,7 +66,7 @@ contract Rental is ReentrancyGuard, Ownable {
         // to endLease
 
         while(pd <= endLease)   {
-            paymentSchedule.push(Payment({ date: pd, paid: false, onTime: false}));
+            paymentSchedule.push(Payment({ date: pd, paid: false, onTime: false, txHash: bytes32(0)}));
             // Add exactly 1 month using the DateTime library (handles varying month lengths)
             pd = BokkyPooBahsDateTimeLibrary.addMonths(pd, 1);
         }
@@ -135,6 +136,14 @@ contract Rental is ReentrancyGuard, Ownable {
             // Return true is rent paid on time
             return true;
         }
+    }
+
+    function storeHash(bytes32 transaction_id) public {
+        // Storing the transaction hash, after payment
+        // the counter gets decreased by one because we need the last PAID transaction,
+        // not the next one to pay
+
+        paymentSchedule[counter-1].txHash = transaction_id;
     }
 
 

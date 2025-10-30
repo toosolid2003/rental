@@ -180,8 +180,8 @@ it("should decrease score by 1 point if rent is paid late", async function()  {
     expect(payments[0][2]).to.equal(true);  // onTime
     
     // Verify score increased by 10
-    // const newScore = await rentalContract.connect(renter).getScore();
-    // expect(newScore).to.equal(initialScore + BigInt(10));
+    const newScore = await rentalContract.connect(renter).getScore();
+    expect(newScore).to.equal(Number(initialScore) + 10);
     
     // Verify landlord received payment
     const landlordBalanceAfter = await ethers.provider.getBalance(landlord.address);
