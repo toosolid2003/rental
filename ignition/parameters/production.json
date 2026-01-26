@@ -1,0 +1,11 @@
+{
+  "RentalScoreModule": {
+    "renter": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    "landlord": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    "location": "34 rue Feutrier 75018 Paris",
+    "payDate": 1788307200,
+    "startDate": 1735689600,
+    "endDate": 1819699200,
+    "expectedRent": "10000000000000000"
+  }
+}
