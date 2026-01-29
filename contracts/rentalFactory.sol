@@ -16,7 +16,8 @@ contract LeaseFactory   {
         address _landlord,
         uint256 _startDate,
         uint256 _endDate,
-        string memory _loc
+        string memory _loc,
+        address _token
 
     ) external returns (address) {
         
@@ -24,7 +25,7 @@ contract LeaseFactory   {
         require(_startDate < _endDate, "Start date should be before end date");
         require(_expectedRent > 0, "Rent should be >0");
 
-        Rental lease = new Rental(_payDate, _expectedRent, _tenant, _landlord, _startDate, _endDate, _loc);
+        Rental lease = new Rental(_payDate, _expectedRent, _tenant, _landlord, _startDate, _endDate, _loc, _token);
 
         leaseByTenant[_tenant].push(address(lease));
         leaseByLandlord[_landlord].push(address(lease));

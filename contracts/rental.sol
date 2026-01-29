@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "hardhat/console.sol";
 import "./BokkyPooBahsDateTimeLibrary.sol";
 
@@ -19,6 +20,7 @@ contract Rental is ReentrancyGuard, Ownable {
     address private renter;
     address private landlord;
     string public loc;
+    address public token;
     
     struct Payment{
         uint256 date;
@@ -47,7 +49,7 @@ contract Rental is ReentrancyGuard, Ownable {
     event NewEnd(uint indexed endDate, address owner);
     event RentUpdate(uint indexed newRent, address landlord);
 
-    constructor(uint _payDate, uint _expectedRent, address _renter, address _landlord, uint _startDate, uint _endDate, string memory _loc) Ownable(_renter) {
+    constructor(uint _payDate, uint _expectedRent, address _renter, address _landlord, uint _startDate, uint _endDate, string memory _loc, address _token) Ownable(_renter) {
         payDate = _payDate; // Initialize with 1st paydate, the next month.
         expectedRent = _expectedRent;
         renter = _renter;
@@ -56,6 +58,7 @@ contract Rental is ReentrancyGuard, Ownable {
         startDate = _startDate;
         endDate = _endDate;
         loc = _loc;
+        token = _token; // Base Sepolia USDC Contract
 
         populateSchedule(_payDate, _endDate);
         counter = 0;
@@ -72,7 +75,7 @@ contract Rental is ReentrancyGuard, Ownable {
         }
 
     } 
-    function payRent() external payable nonReentrant {
+    function payRent() external nonReentrant {
 
        // Declare a memory variable to know if rent is paid on time 
         bool on_time;
@@ -81,13 +84,12 @@ contract Rental is ReentrancyGuard, Ownable {
         require(msg.sender == renter, "Payer not allowed");
 
         // Check if the amount paid matches the expected amount
-        require(msg.value == expectedRent, "Wrong rent amount");
+        // require(msg.value == expectedRent, "Wrong rent amount");
         require(block.timestamp <= endDate, "The lease has expired");
-
 
         
         // After rent is received, send money to the landlord's wallet directly
-        (bool success, ) = landlord.call{value: msg.value}("");
+        bool success = IERC20(token).transferFrom(msg.sender, landlord, expectedRent);
         require(success, "Failed to send the rent");
 
 
@@ -95,14 +97,16 @@ contract Rental is ReentrancyGuard, Ownable {
         on_time = updateScore(1); // Margin set to 1 days after due date. Returns bool: on_time or not.
         
         // Emit RentPaid event
-        emit RentPaid(paymentSchedule[counter].date, msg.value, renter, on_time);
+        emit RentPaid(paymentSchedule[counter].date, expectedRent, renter, on_time);
 
         // Log the payment, its timeliness and move to the next payment on the scheduler
         paymentSchedule[counter].paid = true;
         paymentSchedule[counter].onTime = on_time;
         
         counter += 1;
-        emit NewPayDate(paymentSchedule[counter].date, renter);
+        if (counter < paymentSchedule.length) {
+            emit NewPayDate(paymentSchedule[counter].date, renter);
+        }
 
     }
 
