@@ -14,6 +14,11 @@ const config: HardhatUserConfig = {
       accounts: [process.env.WALLET_KEY!],
       chainId: 84532,
     },
+    base: {
+      url: "https://mainnet.base.org",
+      accounts: [process.env.WALLET_KEY!],
+      chainId: 8453,
+    },
   },
   solidity: "0.8.28",
 };
